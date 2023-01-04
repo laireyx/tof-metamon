@@ -7,7 +7,13 @@ import { TofReader } from "./reader";
 import TofSocket from "./socket";
 import { CustomizationJson } from "./types";
 
-async function metamon(uid: string) {
+type Server = "101" | "102";
+const servers = {
+  "101": "8.213.133.1",
+  "102": "8.213.130.139",
+} as const;
+
+async function metamon(uid: string, server: Server) {
   const LOOKUP = new TofMessageBuilder()
     .add([
       0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x0c, 0x00, 0x04, 0x00,
@@ -22,7 +28,7 @@ async function metamon(uid: string) {
     ])
     .freeze();
 
-  const lookupSocket = new TofSocket();
+  const lookupSocket = new TofSocket({ host: servers[server], port: 30031 });
   const reader = new TofReader(lookupSocket.socket);
 
   lookupSocket.on("readable", async () => {
@@ -49,8 +55,6 @@ async function metamon(uid: string) {
 
       if (chunkType === 0x01000000) {
         msg.readIntChunk(record);
-      } else if (chunkType === 0x03000000) {
-        msg.readI64Chunk(record);
       } else if (chunkType === 0x06000000) {
         msg.readStringChunk(record);
       } else if (chunkType === 0x08000000) {
@@ -62,9 +66,6 @@ async function metamon(uid: string) {
       }
     }
 
-    // 잘 모르겠지만 아무튼 1
-    record.FaceMirror = 1;
-
     await fs.writeFile("output.json", JSON.stringify(record));
     process.exit();
   });
@@ -72,13 +73,27 @@ async function metamon(uid: string) {
   lookupSocket.send(LOOKUP.addString(uid).build());
 }
 
+let uid: string | null = null;
+
 process.stdin.on("data", async (data) => {
-  const uid = data.toString("utf-8").replace(/[\r\n]/g, "");
-  if (uid.length === 17) {
-    console.log("Run with UID " + uid);
-    await metamon(uid);
+  if (!uid) {
+    const str = data.toString("utf-8").replace(/[\r\n]/g, "");
+    if (str.length === 17) {
+      console.log("아스트라 : 1 / 뱅기스 : 2를 입력하세요");
+      uid = str;
+    } else {
+      console.log("잘못된 UID입니다.");
+    }
   } else {
-    console.log("잘못된 UID입니다.");
+    const str = data.toString("utf-8").replace(/[\r\n]/g, "");
+
+    if (str === "1") {
+      await metamon(uid, "101");
+    } else if (str === "2") {
+      await metamon(uid, "102");
+    } else {
+      console.log("잘못된 서버입니다.");
+    }
   }
 });
 
