@@ -66,7 +66,7 @@ async function metamon(uid: string, server: Server) {
       }
     }
 
-    await fs.writeFile("output.json", JSON.stringify(record));
+    await fs.writeFile("1.json", JSON.stringify(record, null, 4));
     process.exit();
   });
 
