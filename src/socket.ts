@@ -8,13 +8,7 @@ export default class TofSocket {
   private _socket: net.Socket;
   private _listeners: Map<string, ListenerCallback[]> = new Map();
 
-  constructor(
-    connectOpts: net.NetConnectOpts = {
-      host: "8.213.130.139",
-      port: 30031,
-      timeout: 5000,
-    }
-  ) {
+  constructor(connectOpts: net.NetConnectOpts) {
     this.connectOpts = connectOpts;
     this._socket = this.initSocket();
   }
