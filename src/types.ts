@@ -98,6 +98,7 @@ const IntKeys = [
 
 const FloatKeys = [
   "HairBlendScale",
+  "BodyValue",
   "NeckValue",
   "ChestOpenValue",
   "HeadValue",
